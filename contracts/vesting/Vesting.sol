@@ -29,7 +29,6 @@ contract VestingDistributionContract {
         m_lastVestingTimestamp = now;
         m_initialTimestap = now;
         m_lastTimestamp = m_initialTimestap + m_duration;
-        calculateVesting();
     }
 
     modifier onlyOwner() {
@@ -38,26 +37,30 @@ contract VestingDistributionContract {
         _;
     }
 
- /*   function stopVesting() public onlyOwner {
-        
-    }*/
+    function stopVesting(address user) public onlyOwner {
+        calculateVesting();
+        for (uint i=0; i<m_users.length; i++) {
+            if (m_users[i] == user){
+                delete m_users[i];
+            }
+        }
+    }
 
     function distributeVesting(uint128 currentVesting) private {
         for (uint i=0; i<m_users.length; i++) {
-            m_users[i].transfer(currentVesting, true, 0)
+            m_users[i].transfer(currentVesting, true, 0);
         }
         m_lastVestingTimestamp = now;
     }
 
-    function calculateVesting() public {
+    function calculateVesting() public onlyOwner {
         if (m_distributionType == 0) {
             calculateVestingEqual();
         }
     }
 
-    function calculateVestingEqual() public {
+    function calculateVestingEqual() public onlyOwner {
         uint128 maxAlloc = m_vestingAmount / uint128(m_users.length);
-        // Add seconds/percentage based distribution
         uint128 vestingPerSecond = maxAlloc / m_duration;
         uint128 currentVesting = (now - m_lastVestingTimestamp) * vestingPerSecond;
         distributeVesting(currentVesting);
