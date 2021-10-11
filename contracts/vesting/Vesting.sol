@@ -39,11 +39,15 @@ contract VestingDistributionContract {
 
     function stopVesting(address user) public onlyOwner {
         calculateVesting();
+        address[] users;
         for (uint i=0; i<m_users.length; i++) {
             if (m_users[i] == user){
-                delete m_users[i];
+                continue;
+            } else {
+                users.push(m_users[i]);
             }
         }
+        m_users = users;
     }
 
     function distributeVesting(uint128 currentVesting) private {
