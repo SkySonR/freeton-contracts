@@ -5,6 +5,7 @@ contract VestingDistributionContract {
     // Error codes: 
     uint constant ERROR_SENDER_IS_NOT_OWNER = 101;
     uint constant ERROR_LOW_BALANCE = 102;
+    uint constant ERROR_VESTING_OVER = 104;
 
     // vesting variables
     uint128 m_vestingAmount;
@@ -17,6 +18,7 @@ contract VestingDistributionContract {
     uint32 m_lastTimestamp;
     uint32 m_duration;
     uint32 m_lastVestingTimestamp;
+    bool m_vestingStatus;
 
     constructor(uint128 sum, address[] users, uint8 distributionType, uint32 duration) public {
         require(msg.pubkey() == tvm.pubkey(), ERROR_SENDER_IS_NOT_OWNER);
@@ -30,6 +32,7 @@ contract VestingDistributionContract {
         m_lastVestingTimestamp = now;
         m_initialTimestap = now;
         m_lastTimestamp = m_initialTimestap + m_duration;
+        m_vestingStatus = true;
     }
 
     modifier onlyOwner() {
@@ -64,14 +67,24 @@ contract VestingDistributionContract {
         }
     }
 
-    function calculateVestingEqual() public onlyOwner {
+    function calculateVestingEqual() private onlyOwner {
         uint128 maxAlloc = m_vestingAmount / uint128(m_users.length);
         uint128 vestingPerSecond = maxAlloc / m_duration;
-        uint128 currentVesting = (now - m_lastVestingTimestamp) * vestingPerSecond;
-        distributeVesting(currentVesting);
+        uint128 timeDiff = (now - m_lastVestingTimestamp);
+        if (timeDiff <= 0) { 
+                m_vestingStatus = false;
+                revert(ERROR_VESTING_OVER);
+        } else {
+            uint128 currentVesting = (now - m_lastVestingTimestamp) * vestingPerSecond;
+            distributeVesting(currentVesting);
+        }
     }
 
-    function getVestingInfo() public view returns(address[] users){
+    function getVestingInfo() public view returns(address[] users, uint32 timestamp, uint128 sum, bool status, uint32 duration){
         users = m_users;
+        timestamp = m_lastVestingTimestamp;
+        sum = m_vestingAmount;
+        status = m_vestingStatus;
+        duration = m_duration;
     }
 }
