@@ -10,6 +10,7 @@ contract VestingDistributionContract {
     uint128 m_vestingAmount;
     uint8 m_distributionType; // 0 - equal destribution
                               // 1 - exponential destribution
+                              // 2
     address[] m_users;
     uint32 m_timestamp;
     uint32 m_initialTimestap;
@@ -70,9 +71,7 @@ contract VestingDistributionContract {
         distributeVesting(currentVesting);
     }
 
-/*    function getCurrentVestingInfo() public {
-        
-    }*/
-
-
+    function getVestingInfo() public view returns(address[] users){
+        users = m_users;
+    }
 }
